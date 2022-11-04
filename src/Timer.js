@@ -1,19 +1,30 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { getTimeStr} from './util/time';
+import { getTimeStr } from "./util/time";
 
 function Timer(props) {
-  const [timer, setTimer] = useState(null);
-  const [startTime, setStartTime] = useState(0);
+  const [timer, setTimer] = useState(
+    sessionStorage.getItem("timer")
+      ? parseInt(sessionStorage.getItem("timer"))
+      : null
+  );
+  const [startTime, setStartTime] = useState(
+    sessionStorage.getItem("startTime")
+      ? parseInt(sessionStorage.getItem("startTime"))
+      : 0
+  );
 
   useEffect(() => {
-
+    return () => {
+      if (sessionStorage.getItem("timer"))
+        clearInterval(parseInt(sessionStorage.getItem("timer")));
+    };
   }, []);
 
   const startTimer = () => {
     let currentSeconds = 0;
-    if(timer){
-        clearInterval(timer);
+    if (timer) {
+      clearInterval(timer);
     }
     let stopNum = setInterval(() => {
       if (sessionStorage.getItem("startTime")) {
@@ -24,19 +35,20 @@ function Timer(props) {
       setStartTime(currentSeconds);
     }, 1000);
     setTimer(stopNum);
+    sessionStorage.setItem("timer", stopNum);
   };
 
   const saveTime = () => {
-    let results = sessionStorage.getItem("results")
-      ? sessionStorage.getItem("results").split(",")
-      : [];
+    // let results = sessionStorage.getItem("results")
+    //   ? sessionStorage.getItem("results").split(",")
+    //   : [];
 
-    if (results) {
-      results.push(sessionStorage.getItem("startTime"));
-      sessionStorage.setItem("results", results.join(","));
-    } else {
-      sessionStorage.setItem("results", sessionStorage.getItem("startTime"));
-    }
+    // if (results) {
+    //   results.push(sessionStorage.getItem("startTime"));
+    //   sessionStorage.setItem("results", results.join(","));
+    // } else {
+    sessionStorage.setItem("saveTime", sessionStorage.getItem("startTime"));
+    // }
   };
 
   const stopTimer = () => {
@@ -46,42 +58,17 @@ function Timer(props) {
   };
 
   const clearTime = () => {
+    stopTimer();
     sessionStorage.removeItem("startTime");
     setStartTime(0);
   };
 
   const endTimer = () => {
-    let results = sessionStorage.getItem("results");
-    if (results) {
-      results.push();
-    }
-    sessionStorage.setItem("results");
+    // let results = sessionStorage.getItem("results");
+    props.handleEndTime(sessionStorage.getItem("saveTime"), sessionStorage.getItem("startTime"));
+    sessionStorage.removeItem("saveTime");
+    clearTime();
   };
-
-  const clickResult = () => {
-    if (props.handleClickResult) {
-      props.handleClickResult();
-    }
-  };
-
-//   const getTimeStr = () => {
-//     let minutes = parseInt(startTime / 60);
-//     let seconds = startTime % 60;
-//     let minuteStr = "00";
-//     let secondStr = "00";
-
-//     if (minutes < 10) {
-//       minuteStr = "0" + minutes;
-//     } else if (minutes >= 10) {
-//       minuteStr = minutes;
-//     }
-//     if (seconds < 10) {
-//       secondStr = "0" + seconds;
-//     } else if (seconds >= 10) {
-//       secondStr = seconds;
-//     }
-//     return minuteStr + ":" + secondStr;
-//   };
 
   return (
     <TimerWrap>
@@ -93,7 +80,6 @@ function Timer(props) {
           <button onClick={stopTimer}>暫停</button>
           <button onClick={endTimer}>結束</button>
           <button onClick={clearTime}>歸零</button>
-          <button onClick={clickResult}>結果</button>
         </div>
       </div>
     </TimerWrap>
@@ -101,21 +87,28 @@ function Timer(props) {
 }
 
 const TimerWrap = styled.div`
-  position:absolute;
-  transform:translateX(-50%);
-  left:50%;
-  top:20px;
+  position: absolute;
+  transform: translateX(-50%);
+  left: 50%;
+  top: 20px;
   .mainPanel {
     border: 1px solid gray;
     display: inline-block;
     border-radius: 10px;
     padding: 20px;
     text-align: center;
+    width: 422px;
+    box-sizing: border-box;
     .timerValue {
       font-family: helvetica;
       font-weight: bold;
       font-size: 30px;
       margin-bottom: 10px;
+    }
+  }
+  .btnArea {
+    button {
+      margin: 0 5px;
     }
   }
 `;
